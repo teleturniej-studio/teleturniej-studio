@@ -1,0 +1,413 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Doświadczenie</title>
+	<link rel="stylesheet/less" type="text/css" href="style.less">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/3.9.0/less.min.js"></script>
+	<script src="//cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="lib/threejs/build/three.min.js"></script>
+	<script src="lib/threejs/examples/js/loaders/GLTFLoader.js"></script>
+	<script src="lib/threejs/examples/js/controls/OrbitControls.js"></script>
+
+	<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+	<script src="lib/lib.js"></script>
+	<script src="lib/3d_lib.js"></script>
+	<script>
+		var module={}; 
+	</script>
+	<script src="lib/gamedata_warsztaty.js"></script>
+	<script>
+		var gamedata=module.exports;
+		var debug=gamedata.debug;
+	</script>
+</head>
+
+<body>
+	<div id="app">
+
+		<div class="block-chat" v-if="chat_visible">
+			<ul class="chatbox">
+				<li v-for="chatline in chatlines">
+					{{ chatline.text }}
+				</li>
+
+			</ul>
+
+			<form class="chat" action="">
+				<input class="chatinput" ref="chatinput" autocomplete="off" placeholder="Rozmowa">
+				<button class="mobile-hide">→</button>
+			</form>
+		</div>
+
+		<div class="tablica stagehello" v-if="introstage=='preview_hello'">
+			<div class="bg" style="color: black"></div>
+			<div class="fg">
+
+				Dziękuję, że tu jesteś. 
+				<br>To doświadczenie potrwa około 15 minut. 
+				<br>Twój udział jest anonimowy, również dla mnie. 
+				<br>
+				<em><a target="_blank" href="https://instagram.com/michalszota/">@michalszota</a></em>
+				<br>
+				<br>
+				<div>
+					<button v-on:click.once="introstage='zero'">OK. NIE MAM ŻADNYCH OCZEKIWAŃ</button>
+				</div>
+
+				<br><small>Projekt jest realizowany w ramach stypendium artystycznego m.st. Warszawy</small>
+
+
+			</div>
+		</div>
+
+
+		<div class="tablica stage0" v-if="introstage=='zero'">
+			<div class="bg"></div>
+			<div class="fg">
+				
+
+				To sen. Jest <sup>jeszcze</sup> rok 2022. Za chwilę trafisz do teleturnieju. <sup>Jeszcze</sup> nie wiadomo, co będzie dalej.
+				<br>
+				<div>
+					<button v-on:click="introstage='pytanie_o_imie'">OK OK</button>
+				</div>
+
+			</div>
+		</div>
+		<div class="tablica stage0" v-if="introstage=='pytanie_o_imie'">
+			<div class="bg"></div>
+			<div class="fg">Wybierz sobie imię
+
+				<div>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[0];">{{ emojis[0] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[1];">{{ emojis[1] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[2];">{{ emojis[2] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[3];">{{ emojis[3] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[4];">{{ emojis[4] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[5];">{{ emojis[5] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[6];">{{ emojis[6] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[7];">{{ emojis[7] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[8];">{{ emojis[8] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[9];">{{ emojis[9] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[10];">{{ emojis[10] }}</button>
+					<button v-on:click.once="introstage='czolowka'; player.nick=emojis[11];">{{ emojis[11] }}</button>
+				</div>
+
+				<small>Już zaczynamy.</small>
+			</div>
+		</div>
+
+		<div class="tablica pytania" v-if="introstage=='ready' && game.stage=='zadawanie_pytania' && player.nick">
+			<div class="bg"></div>
+			<div class="fg pytania">
+
+				<div class="with-shadow pytanie" v-if="!game.pytanie.noshow">{{ (player.answers[game.pytanie.q] ? '' : '') + game.pytanie.q }}</div>
+
+				<div class="qrow" v-if="!player.answers[game.pytanie.q]">
+					<button v-for="a in game.pytanie.a" v-on:click.once="player.answers[game.pytanie.q]=a; act_odpowiadam();">{{ a }}</button>
+				</div>
+				<div class="odpowiedz" v-if="player.answers[game.pytanie.q]">
+					Czekamy na pozostałych
+				</div>
+
+			</div>
+		</div>
+
+	<div class="tablica pytania" v-if="
+	introstage=='ready' && game.stage=='zakonczenie' && player.nick">
+	<div class="bg"></div>
+	<div class="fg pytania">
+		To koniec zdarzeń
+	</div>
+</div>
+
+<div class="tablica" v-if="killmode">
+	<div class="qrow">
+		<button style="font-size: 15px;" v-on:click.once="killmode=false; kill(p.id);" v-for="p in players">{{ p.nick }} {{ p.id }}</button>
+	</div>
+</div>
+<div class="tablica" v-if="mutemode">
+	<div class="qrow">
+		<button style="font-size: 15px;" v-on:click.once="mutemode=false; mute(p.id);" v-for="p in players">{{ p.nick }} {{ p.id }}</button>
+	</div>
+</div>
+
+<transition name="fade" mode="out-in">
+	<div class="info" v-if="infomsg">
+		<transition name="fade" mode="out-in">
+			<div class="in" :key="infomsg">{{ infomsg }}</div>
+		</transition>
+	</div>
+</transition>
+
+
+<button class="chat_toggle" v-if="!viz_stage && player.nick" v-on:click="chat_visible=!chat_visible; chat_focus();"><span v-if="chat_visible">✖️</span><span v-if="!chat_visible">💬</span></button>
+
+<div class="timer" v-if="timer && game.stage=='zadawanie_pytania'"></div>
+
+
+<div class="debugger" v-if="is_debug">
+	introstage {{ introstage }}
+	game.stage {{ game.stage }}
+	game.pytanie {{ game.pytanie }}
+	game.pytanie_nr {{ game.pytanie_nr }}
+</div>
+</div>
+
+</body>
+
+<!--
+<script type="module">
+ $('#app').remove(); $('body').addClass('mounted'); 
+  $('body').append('<div class="debugger open"/></div>');
+
+ import {World2021} from './lib/3d_2021.js';
+ window.world=new World2021(); 
+</script>
+-->
+
+<script type="module">
+	import {World2021} from './lib/3d_2021.js';
+	var connect_attempt=0; 
+	var tmp={}; 
+	var socket = io(window.location.hostname+':2021'); 
+	window.world = new World2021();
+
+
+	window.app = new Vue({
+		el: '#app',
+		data: {
+			is_debug: debug,
+			introstage: 'zero',
+			hellomsg: 'Doświadczenie / michał szota / 2021—',
+			emojis: emojis_src,
+			killmode: false,
+			mutemode: false,
+			infomsg: '',
+			viz_stage: '',
+			chat_visible: debug ? true : false,
+			podsumowanie_txt: 'Podsumowanie',
+			timer: 0,
+			timer_pause: false,
+			player: {
+				'nick': debug ? emojis_src[0] : '',
+				'answers': {},
+			},
+			players: {
+			},
+			game: {},
+			chatlines: []
+		},
+		created: function() {
+			$('body').addClass('mounted'); $('body').addClass(window.location.hostname);
+			setTimeout(function() {
+				$('.stage0 button').first().focus(); 
+			},200); 
+		},
+		mounted: function() {
+			  // START
+			  socket.on('connect', function() {
+			  	console.log('connect ok'); 
+			  	if (connect_attempt>0) {
+			  		window.location.href=window.location.href; 
+			  		return false; 
+			  	}
+			  	connect_attempt++;
+			  	// app.introstage='preview_hello'; 
+			  	app.introstage=debug ? 'czolowka' : 'preview_hello';
+			  	do_timer(); 
+			  });
+			}, 
+			methods: {
+				act_odpowiadam :function() {
+					socket.emit('cmd_odpowiedz',{player:app.player}); 
+				},
+				chat_focus:function() {
+					$('.chatinput').focus(); 
+				},
+				kill:function(id) {
+					socket.emit('chat','!idkill'+id); 
+				},
+				mute:function(id) {
+					socket.emit('chat','!idmute'+id); 
+				}
+			},
+			watch: {
+				introstage:function(v) {
+					setTimeout(function() {
+						$('.tablica button').first().focus(); 
+					},100); 
+					if (v=='czolowka') {
+						world.seq_czolowka().then(() => {
+							act_register_player();
+						}); 
+					}
+				},
+	 //  'game.pytanie_nr':function(v) {
+	 //   world.sequence_podnies_poziom_wody(); 
+	 // },
+	 timer: function(v) {
+	 	if (v) {
+	 		if ($('.timer').length) $('.timer').css('transform', 'scaleX('+(v / gamedata.max_czas_pytania) + ')');
+	 	}
+	 },
+	}
+});
+
+	$('body').on('submit', 'form.chat', function(e) {
+		if (!$('.chatinput').val()) return false;
+		e.preventDefault();
+		socket.emit('chat', $('.chatinput').val());
+		$('.chatinput').val('');
+		return false;
+	});
+
+  // $('body').on('click', '.block-chat', function() {
+  //   $('.chatinput').focus();
+  // });
+
+  socket.on('cmd_killmode', function(msg) {
+  	app.killmode=msg.cmd; 
+  }); 
+  socket.on('cmd_mutemode', function(msg) {
+  	app.mutemode=msg.cmd; 
+  }); 
+
+  let chatq=[];
+  let chatq_running=false;
+
+  function chatq_run() {
+  	if (chatq.length) {
+  		chatq_running=true;
+	  	app.infomsg = chatq.shift();
+	  	setTimeout(function() {
+	  		app.infomsg = '';
+	  	}, 1800);
+	  	setTimeout(chatq_run, 2000);
+
+	} else {
+		chatq_running=false;
+	}
+  }
+
+
+  socket.on('chat', function(msg) {
+  	if (chatq.length<10) {
+	  	chatq.push(msg); 
+	  	if (!chatq_running) chatq_run();
+	} 
+  	app.chatlines.push({ text: msg });
+  	Vue.nextTick(function() {
+  		if ($('.chatbox').length) $('.chatbox').scrollTop($('.chatbox').get(0).scrollHeight * 2)
+  	});
+  });
+
+  // socket.on('chat', function(msg) {
+  // 	app.infomsg = msg;
+  // 	if (window.chatTimeout) clearTimeout(window.chatTimeout); 
+  // 	window.chatTimeout=setTimeout(function() {
+  // 		app.infomsg = '';
+  // 	}, 2300);
+  // 	app.chatlines.push({ text: msg });
+  // 	Vue.nextTick(function() {
+  // 		if ($('.chatbox').length) $('.chatbox').scrollTop($('.chatbox').get(0).scrollHeight * 2)
+  // 	});
+  // });
+
+
+  function sync_all_players(players_new,players_old) {
+	// world.delete_all_entities();
+
+	for (let [player_key, player_value] of Object.entries(players_new)) {
+		console.log('sync_all_players',player_key,player_value); 
+
+		if (players_old[player_key]) {
+
+		} else {
+			world.spawn_player(player_key,player_value.nick,(socket.id == player_key));
+		}
+
+		if (app.game.pytanie && app.game.pytanie.q) {
+			let txt = players_new[player_key].answers[app.game.pytanie.q];
+			if (txt) world.getPlayers()[player_key].set_txtlabel(txt);
+		}
+
+	}
+
+	for (let [player_key, player_value] of Object.entries(players_old)) {
+		if (!players_new[player_key]) {
+			world.seq_death(player_key); 
+		}
+	}
+}
+
+
+function do_timer() {
+	if (gamedata.max_czas_pytania && app.timer && !app.timer_pause) {
+		app.timer = app.timer - 1000;
+	}
+	setTimeout(do_timer, 1000);
+}
+
+
+function act_register_player() {
+	return new Promise(function(resolve) {
+		socket.emit('cmd_register_player', {player: app.player}, function(ack_last_player_id) {
+			window.last_player_id=ack_last_player_id; 
+			app.introstage='ready'; 
+			resolve('done'); 
+		});
+	});
+
+}  
+
+socket.on('state', function(msg) {
+	console.log('incoming state msg:',msg); 
+	if (msg.cmd=='client_sync_all_players') {
+		app.game=msg.game; 
+		sync_all_players(msg.players,app.players);
+		app.players=msg.players; 
+	}
+
+	if (msg.cmd=='client_zadawanie_pytania_start') {
+		app.game=msg.game; 
+		app.timer=gamedata.max_czas_pytania; 
+		world.clear_all_txtlabels(); 
+		world.seq_zadawanie_pytania();
+	} 
+
+	if (msg.cmd=='client_zadawanie_pytania_koniec') {
+		app.game=msg.game; 
+		if (app.game.pytanie.ostatnie) return false;
+		world.seq_podsumowanie(); 
+	} 
+
+	if (msg.cmd=='client_odpowiedz') {
+		app.game=msg.game; 
+		sync_all_players(msg.players,app.players);
+		app.players=msg.players; 
+		world.seq_camera_look_at_player(msg.player_id_odpowiadajacy);
+	}
+
+	if (msg.cmd=='client_pause_timer') {
+		app.timer_pause=msg.timer; 
+	}
+
+	if (msg.cmd=='client_zakonczenie_start') {
+		app.game=msg.game; 
+		app.timer_pause=true; 
+		world.seq_koniec();
+	}
+
+
+});
+
+socket.on('cmd_chat_control', function(msg) {
+	app.chat_visible=msg.cmd;
+}); 
+
+
+</script>

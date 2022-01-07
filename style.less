@@ -1,0 +1,331 @@
+@import "style_common.less";
+@import "style_typo.less";
+@kolor: blue;
+@chat_w: 30%;
+
+.font0 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+.font1 {
+    font-family: 'helvetica neue', helvetica, sans-serif;
+}
+.font2 {
+    font-family: serif;
+}
+html {
+    height: 100%;
+    font-size: 20px;
+    @media (max-width: @resp-lg) {
+        font-size: 16px;
+    }
+}
+canvas {
+    cursor: move; 
+}
+button {
+    cursor: pointer !important;
+}
+
+body {
+    .font0;
+    font-size: 1rem;
+    // .animl; 
+    opacity: 0.5; 
+    overflow: hidden; 
+    &.mounted {
+        opacity: 1;
+    }
+    background: black;
+    color: white; 
+    line-height: 1.1; 
+}
+.neg {
+    background: black; color: white;
+}
+.block-chat {
+    position: fixed;
+    height: 100%;
+    width: @chat_w;
+    right: 0; 
+    top: 0;
+    z-index: 1000;
+    font-weight: normal; 
+    display: flex; flex-direction: column; 
+    font-size: 15px;
+    line-height: 1.2;
+    @media (max-width: @resp-lg) {
+        flex-direction: column-reverse;
+        line-height: 1.1;
+        font-size: 14px;
+        width: 100%;
+        pointer-events: none !important;
+        padding-top: 0;
+        padding-left: 0;
+        padding-right: 3rem; 
+        height: 50%; 
+    }
+
+    form {
+        flex-shrink: 0; 
+        height: 2rem; 
+        padding: 5px; display: flex;
+
+        @media (max-width: @resp-lg) {
+            flex-shrink: 0;
+        }
+        pointer-events: auto; 
+        input {
+            font: inherit;
+            width: 100%; 
+            @media (max-width: @resp-lg) {
+                font-size: 16px;  
+            }
+            background: rgba(255,255,255,0.8);
+            border-radius: 5px;
+            padding: 2px;
+            border: black solid 1px;
+        }
+        button {
+            font: inherit;
+            background: rgba(255,255,255,0.8);
+            border: black solid 1px;
+            border-radius: 5px;
+            padding: 2px;
+            flex-shrink: 0; 
+            &:hover {
+                background: black;
+                color: white;
+            }
+        }
+    }
+    .chatbox, form {
+        background: rgba(0,0,0,0.6);
+    }
+
+    .chatbox {
+        flex-grow: 2;
+        overflow: auto; 
+        list-style-type: none; margin: 0; padding: 0;
+        li.hello {
+        }
+        li {
+            padding: 2px 5px; 
+        }
+    }
+
+}
+
+.debugger {
+    white-space:  pre-line; 
+    position: fixed;
+    z-index: 10000;
+    top: 35%;
+    font-size: 14px; 
+    left: 0;
+    pointer-events: none; 
+    background: black;
+
+    display: none;
+
+    body.localhost & {
+        display: block;  
+    }
+    &.open {
+        display: block;
+    }
+    opacity: 0.3;
+
+    @media (max-width: @resp-lg) {
+    }
+}
+
+.tablica {
+    .noselect; 
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 100;
+    display: flex; flex-direction: column; text-align: center; 
+    overflow-y: auto;  
+    justify-content: flex-end; 
+    font-size: 1.6rem;
+    pointer-events: none; 
+
+
+    @media (max-width: @resp-lg) {
+        font-size: 1.5rem;
+        display: block; 
+    }
+    @media (max-width: @resp-sm) {
+        font-size: 1.2rem;
+        display: block; 
+    }
+
+
+    &.pytania {
+        background: linear-gradient(to bottom,  rgba(0,0,0,0) 50%,rgba(0,0,128,0.8) 100%); 
+    }
+
+    .bg {
+        .abs;
+    }
+    &.stagehello .bg {
+        background: yellow; 
+    }
+    &.stagehello .fg {
+        color: black; 
+    }
+    &.stage0 .bg {
+        background: #f0f0f0; 
+    }
+    &.stage0 .fg {
+        color: black; 
+    }
+
+    h1 {
+        font: inherit; margin: 0; 
+    }
+
+    .fg {
+        position: relative; 
+        margin: auto;
+        padding: 2rem 1rem; 
+    }
+
+    .fg.pytania {
+        height:  100%; 
+        display: flex; justify-content: flex-end; 
+        flex-direction: column; 
+        width: 100%; 
+    }
+
+    button {
+        pointer-events: auto;  
+        background-color: white; 
+        border-radius: 10px; 
+        margin: 0.5rem;
+        box-shadow:  6px 6px 12px rgba(0,0,0,0.3); 
+        vertical-align: top; 
+        @media (max-width: @resp-lg) {
+            width: auto;
+        }
+        &:hover {
+            background: pink; 
+        }
+    }
+
+    &.pytania button {
+        width: 30%; 
+    }
+
+    .odpowiedz {
+        opacity: 0.7; 
+    }
+
+    .pytanie {
+        font-size: 120%;
+        margin-bottom: 10px; 
+    }
+}
+
+.qrow {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    button {
+        font-size: inherit; 
+    }
+}
+
+canvas {
+    .abs; 
+    opacity: 0; 
+
+    body.mounted & {
+        opacity: 1;
+    }
+}
+
+.info {
+    position: fixed; 
+    top: 10%;
+    left: 0; width: 100%;
+    pointer-events: none;
+    z-index: 99;
+    color: white;
+    .with-shadow; 
+
+    font-size: 2rem; 
+    @media (max-width: @resp-lg) {
+        font-size: 14px;
+    }
+    line-height: 1.2; 
+    text-align: center; 
+
+    .in {
+        max-width: 600px; 
+        line-height: 1;
+        display: inline-block; 
+        text-align: center; 
+    }
+    // .in::before {
+    //     content: 'info';
+    //     background: black;
+    //     color: #00ff00; 
+    //     padding: 0.1em 0.5em;
+    //     font-size: 80%;
+    //     font-weight: bold;
+    //     display: inline-block; vertical-align: baseline; 
+    //     text-align: center;
+    //     border-radius: 2px;
+    //     margin-right: 1rem; 
+    // }
+}
+
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .4s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+
+.chat_toggle {
+    position: fixed; 
+    z-index: 10000;
+    top: 0; 
+    right: 0;
+    margin: 3px;
+    padding:3px; 
+    border-radius: 5px;
+    background: white; 
+    line-height: 1; 
+    box-shadow:  2px 2px 6px rgba(0,0,0,0.5); 
+    span {
+        display: inline-block;
+    }
+}
+
+.with-shadow {
+    text-shadow:  2px 2px 6px rgba(0,0,0,0.5); 
+
+}
+
+.timer {
+    position: absolute; 
+    bottom: 0%;
+    width:  100%; 
+    left: 0;
+    transform-origin: 0 0; 
+    pointer-events: none;
+    text-align: center;
+    z-index: 2000;
+    font-size: 0; 
+    height: 5px;
+    // transition: all 1s;  
+    background: #0000ff;
+}
+
+button {
+    border-radius: 5px;
+    background: white;
+    border: black solid 1px;
+    padding: 5px; 
+}
